@@ -1,0 +1,33 @@
+name: PHP Composer
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+tests:
+runs-on: ubuntu-latest
+name: Tests
+
+strategy:
+matrix:
+node-version: [10.xx,12.xx,14.xx]
+steps:
+- name: Checkout code
+uses: actions/checkout@v2
+- name: Checkout branch
+run: git chekout dev
+- name: Install Composer dependencies
+run: composer install --prefer-dist --no-interaction --no-suggest
+- name: Install NPM dependencies
+run: npm install
+- name: Compile assets
+run: npm run production
+- name: php dependencies
+run: php artisan migrate
+run: php artisan cache:clear
+run: php artisan view:clear
+run: php artisan config:clear
+run: php artisan route:clear
