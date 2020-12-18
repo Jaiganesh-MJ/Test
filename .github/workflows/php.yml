@@ -1,33 +1,32 @@
-name: PHP Composer
+name: CD
 
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
 
 jobs:
-tests:
-runs-on: ubuntu-latest
-name: Tests
-
-strategy:
-matrix:
-node-version: [10.xx,12.xx,14.xx]
-steps:
-- name: Checkout code
-uses: actions/checkout@v2
-- name: Checkout branch
-run: git chekout dev
-- name: Install Composer dependencies
-run: composer install --prefer-dist --no-interaction --no-suggest
-- name: Install NPM dependencies
-run: npm install
-- name: Compile assets
-run: npm run production
-- name: php dependencies
-run: php artisan migrate
-run: php artisan cache:clear
-run: php artisan view:clear
-run: php artisan config:clear
-run: php artisan route:clear
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.PUSH_TOKEN }}
+    - name: Set up Node
+      uses: actions/setup-node@v1
+      with:
+        node-version: '12.x'
+    - run: npm install
+    - name: Commit built assets
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -f public/
+        git commit -m "Build front-end assets"
+        git push -f origin deploy
+    - name: Deploy to production
+      uses: appleboy/ssh-action@master
+      with:
+        username: azureuser
+        host: YOUR SERVER'S HOSTNAME GOES HERE
+        password: ${{ secrets.SSH_PASSWORD }}
+        script: 'cd /var/www/html && ./server_deploy.sh'
